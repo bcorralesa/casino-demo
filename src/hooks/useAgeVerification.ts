@@ -1,0 +1,63 @@
+// src/hooks/useAgeVerification.ts
+import { useState, useEffect, useRef } from 'react';
+
+const SUBS_KEY = import.meta.env.VITE_SUBS_KEY!;
+
+export function useAgeVerification() {
+  const [loading, setLoading] = useState(false);
+  const [error,   setError]   = useState<string|null>(null);
+  const [id,      setId]      = useState<string|null>(null);
+  const respIdRef = useRef<string|null>(null);
+
+  const startVerification = async () => {
+    setLoading(true);
+    try {
+      const res = await fetch(
+        '/api/idv/idvpayload/',                  // o tu URL directa si ya quitaste el proxy
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Ocp-Apim-Subscription-Key': SUBS_KEY,
+          },
+          body: JSON.stringify({
+            payload: { documentVerification: { ageOver18: true } }
+          })
+        }
+      );
+      if (!res.ok) throw new Error(`POST fallido: ${res.status}`);
+      const json = await res.json() as { id: string; responseId: string };
+      setId(json.id);                            // guardamos el id
+      respIdRef.current = json.responseId;       // guardamos el responseId
+      setLoading(false);                         // ¡importantísimo parar loading!
+    } catch (e: any) {
+      setError(e.message);
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (!respIdRef.current) return;
+    const interval = setInterval(async () => {
+      try {
+        const res = await fetch(
+          `/api/idv/idvpayload/${respIdRef.current}`,
+          { headers: { 'Ocp-Apim-Subscription-Key': SUBS_KEY } }
+        );
+        if (res.status === 404) return;
+        clearInterval(interval);
+        if (!res.ok) throw new Error(`GET fallido: ${res.status}`);
+        const result = await res.json();
+        window.dispatchEvent(
+          new CustomEvent('ageVerificationResult', { detail: result })
+        );
+      } catch (e: any) {
+        clearInterval(interval);
+        setError(e.message);
+      }
+    }, 2000);
+    return () => clearInterval(interval);
+  }, [id]);
+
+  return { startVerification, loading, error, id };
+}
