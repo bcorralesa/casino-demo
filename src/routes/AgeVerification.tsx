@@ -11,11 +11,21 @@ export default function AgeVerification() {
 
   useEffect(() => {
     startVerification();
-    const handler = (e: CustomEvent) => {
-    const ageOk = e.detail.documentVerificationResults.ageOver18;
+    //const handler = (e: CustomEvent) => {
+    //const ageOk = e.detail.documentVerificationResults.ageOver18;
     //navigate('/result', { state: { ageOver18: ageOk } });
-    navigate('/verified', { state: { ageOver18: ageOk } });
-    };
+    //navigate('/verified', { state: { ageOver18: ageOk } });
+    //};
+     const handler = (e: any) => {
+    const ageOk = e.detail.documentVerificationResults.ageOver18;
+    if (ageOk) {
+      // Sólo si es mayor mostramos la pantalla “Verified”
+      navigate('/verified', { state: { ageOver18: ageOk } });
+    } else {
+      // Si no, vamos directo al mensaje de “Sorry…”
+      navigate('/result', { state: { ageOver18: ageOk } });
+    }
+  };
     window.addEventListener('ageVerificationResult', handler as any);
     return () => window.removeEventListener('ageVerificationResult', handler as any);
   }, []);
@@ -42,7 +52,8 @@ export default function AgeVerification() {
      fontSize: '0.9rem',
      color: 'var(--color-text)'
    }}>
-     Do not close this page; once you complete the process on your mobile,<br/>
+     Do not close this page.<br/>
+     Once you complete the process on your mobile,<br/>
      the flow will automatically continue here.
  </p>
         </div>
