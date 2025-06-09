@@ -21,13 +21,13 @@ export default function Result() {
         textAlign: 'center'
       }}>
         <h2 style={{ color: 'var(--color-primary)', marginBottom: '1rem' }}>
-          Lo sentimos
+          Sorry
         </h2>
         <p style={{ marginBottom: '2rem' }}>
-          No cumples con la edad mínima para ingresar.
+          You do not meet the minimum age requirement to enter.
         </p>
         <button className="btn-secondary" onClick={() => navigate('/')}>
-          Intentar de nuevo
+          Try Again
         </button>
       </div>
     </div>

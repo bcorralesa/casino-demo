@@ -10,14 +10,14 @@ export default function Welcome() {
 
       {/* ③ título centrado */}
       <h1 className="text-center" style={{ fontSize: '2rem', marginBottom: '1rem' }}>
-        ¡Bienvenido a YoCasino!
+        Welcome to YoCasino!
       </h1>
 
       <p className="text-center" style={{ marginBottom: '2rem' }}>
-        Para continuar, por favor verifica tu edad.
+        To continue, please verify your age.
       </p>
       <button className="btn-primary" onClick={() => navigate('/verify')}>
-        Continuar
+        Continue
       </button>
     </div>
   );

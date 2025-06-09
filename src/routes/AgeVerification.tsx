@@ -13,7 +13,8 @@ export default function AgeVerification() {
     startVerification();
     const handler = (e: CustomEvent) => {
     const ageOk = e.detail.documentVerificationResults.ageOver18;
-    navigate('/result', { state: { ageOver18: ageOk } });
+    //navigate('/result', { state: { ageOver18: ageOk } });
+    navigate('/verified', { state: { ageOver18: ageOk } });
     };
     window.addEventListener('ageVerificationResult', handler as any);
     return () => window.removeEventListener('ageVerificationResult', handler as any);
@@ -26,16 +27,24 @@ export default function AgeVerification() {
 
   return (
     <div className="container">
-      {loading && <p style={{ fontSize: '1.2rem' }}>Verificando edad… espera un momento</p>}
+      {loading && <p style={{ fontSize: '1.2rem' }}>Verifying age… please wait</p>}
       {error   && <p className="error">Error: {error}</p>}
 
       {/* Cuando ya no estás cargando, no hay error, tienes id y es desktop */}
       {!loading && !error && id && !isMobile && (
         <div style={{ textAlign: 'center' }}>
           <p style={{ marginBottom: '1rem' }}>
-            Escanea con tu móvil para continuar:
+            Scan with your mobile to continue:
           </p>
-          <QRCodeCanvas value={`idverifier://?id=${id}`} size={200} />
+          <QRCodeCanvas value={`idverifier://?id=${id}`} size={400} />
+          +   <p style={{
+     marginTop: '1rem',
+     fontSize: '0.9rem',
+     color: 'var(--color-text)'
+   }}>
+     Do not close this page; once you complete the process on your mobile,<br/>
+     the flow will automatically continue here.
+ </p>
         </div>
       )}
     </div>
