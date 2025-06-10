@@ -1,4 +1,7 @@
 // src/hooks/useAgeVerification.ts
+console.log('ENV DEV=', import.meta.env.DEV);
+console.log('VITE_APIM_BASE=', import.meta.env.VITE_APIM_BASE);
+
 import { useState, useEffect, useRef } from 'react';
 
 const SUBS_KEY = import.meta.env.VITE_SUBS_KEY!;
