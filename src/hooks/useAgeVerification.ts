@@ -2,6 +2,14 @@
 import { useState, useEffect, useRef } from 'react';
 
 const SUBS_KEY = import.meta.env.VITE_SUBS_KEY!;
+const DEV_PROXY   = '/api';
+const PROD_BASE   = import.meta.env.VITE_APIM_BASE;
+const API_BASE    = import.meta.env.DEV
+  ? DEV_PROXY
+  : PROD_BASE;
+
+const POST_URL = `${API_BASE}/idv/idvpayload`;
+const GET_URL  = (r: string) => `${API_BASE}/idv/idvpayload/${r}`;
 
 export function useAgeVerification() {
   const [loading, setLoading] = useState(false);
@@ -12,19 +20,14 @@ export function useAgeVerification() {
   const startVerification = async () => {
     setLoading(true);
     try {
-      const res = await fetch(
-        '/api/idv/idvpayload/',                  // o tu URL directa si ya quitaste el proxy
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Ocp-Apim-Subscription-Key': SUBS_KEY,
-          },
-          body: JSON.stringify({
-            payload: { documentVerification: { ageOver18: true } }
-          })
-        }
-      );
+      const res = await fetch(POST_URL, {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    'Ocp-Apim-Subscription-Key': import.meta.env.VITE_SUBS_KEY
+  },
+  body: JSON.stringify({ payload: { documentVerification: { ageOver18: true } } })
+});
       if (!res.ok) throw new Error(`POST fallido: ${res.status}`);
       const json = await res.json() as { id: string; responseId: string };
       setId(json.id);                            // guardamos el id
