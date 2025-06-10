@@ -7,7 +7,7 @@ const SUBS_KEY  = process.env.VITE_SUBS_KEY;
 const APIM_BASE = process.env.VITE_APIM_BASE;
 
 if (!SUBS_KEY || !APIM_BASE) {
-  console.error("❌ Missing VITE_SUBS_KEY or VITE_APIM_BASE");
+  console.error("❌ Missing VITE_SUBS_KEY or VITE_APIM_BASE keys in environment variables.");
   process.exit(1);
 }
 
