@@ -1,15 +1,13 @@
-// api/verify-age/index.ts
-
-// Don't import from @azure/functions – we'll use `any` for simplicity
-export default async function verifyAge(context: any, req: any): Promise<void> {
+// api/verify-age/index.js
+module.exports = async function (context, req) {
   try {
     const resp = await fetch(
       "https://reactid-api-management.azure-api.net/idv/idvpayload",
       {
-        method: req.method, // POST
+        method: req.method,
         headers: {
           "Content-Type": "application/json",
-          "Ocp-Apim-Subscription-Key": process.env["VITE_SUBS_KEY"]!,
+          "Ocp-Apim-Subscription-Key": process.env["VITE_SUBS_KEY"],
         },
         body: JSON.stringify(req.body),
       }
@@ -19,10 +17,10 @@ export default async function verifyAge(context: any, req: any): Promise<void> {
       status: resp.status,
       body,
     };
-  } catch (err: any) {
+  } catch (err) {
     context.res = {
       status: 500,
       body: { error: err.message },
     };
   }
-}
+};
