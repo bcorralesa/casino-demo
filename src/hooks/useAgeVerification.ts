@@ -43,8 +43,9 @@ export function useAgeVerification() {
     if (!respIdRef.current) return;
     const interval = setInterval(async () => {
       try {
+        const url = GET_URL(respIdRef.current!);
         const res = await fetch(
-          `/api/idv/idvpayload/${respIdRef.current}`,
+         url,
           { headers: { 'Ocp-Apim-Subscription-Key': SUBS_KEY } }
         );
         if (res.status === 404) return;
