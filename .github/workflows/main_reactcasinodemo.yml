@@ -57,20 +57,12 @@ jobs:
       - name: Unzip artifact for deployment
         run: unzip release.zip
       
-      - name: Login to Azure
-        uses: azure/login@v2
-        with:
-            client-id:       ${{ secrets.AZURE_CLIENT_ID }}
-            tenant-id:       ${{ secrets.AZURE_TENANT_ID }}
-            subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-          # Make sure the above secret exists in your repository's secrets.
-          # If not, go to your repository Settings > Secrets and add it, or update this line to use the correct secret name.
-
       - name: 'Deploy to Azure Web App'
         id: deploy-to-webapp
         uses: azure/webapps-deploy@v3
         with:
           app-name: 'reactcasinodemo'
+          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
           slot-name: 'Production'
           package: .
           
