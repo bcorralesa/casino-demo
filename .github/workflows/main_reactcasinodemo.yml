@@ -60,9 +60,11 @@ jobs:
       - name: Login to Azure
         uses: azure/login@v2
         with:
-          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_F5DC2C740F0541729747701B366F37F3 }}
-          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_ECA8BEBC5A314CE2A3A7A2DE71AA3C30 }}
-          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_996AFE7A77E54942AF4C7FA6DBB414C9 }}
+            client-id:       ${{ secrets.AZURE_CLIENT_ID }}
+            tenant-id:       ${{ secrets.AZURE_TENANT_ID }}
+            subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          # Make sure the above secret exists in your repository's secrets.
+          # If not, go to your repository Settings > Secrets and add it, or update this line to use the correct secret name.
 
       - name: 'Deploy to Azure Web App'
         id: deploy-to-webapp
