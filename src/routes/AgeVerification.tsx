@@ -59,7 +59,7 @@ useEffect(() => {
   useEffect(() => {
     const timer = setTimeout(() => {
       window.location.reload()
-    }, 60_000) // 60,000 ms = 60 s
+    }, 120_000) // 60,000 ms = 60 s
     return () => clearTimeout(timer)
   }, [])
 
