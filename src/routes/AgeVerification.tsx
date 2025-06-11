@@ -20,7 +20,7 @@ useEffect(() => {
 
     const ageOk = results.ageOver18
     const similarity = results.portraitLivenessPassive.similarityScore
-    const liveOk = similarity > 80
+    const liveOk = similarity > 80           // now true if >80%
 
     if (ageOk && liveOk) {
       // Ambos checks pasan → pantalla de éxito
@@ -29,9 +29,20 @@ useEffect(() => {
       })
     } else {
       // Falla edad o liveness → pantalla de error
-      navigate('/result', {
-        state: { ageOver18: ageOk, similarityScore: similarity }
-      })
+      //navigate('/result', {
+      //  state: { ageOver18: ageOk, similarityScore: similarity }
+      //})
+      // If age is OK but liveness isn’t, go to a custom “liveness error” page
+      if (ageOk) {
+       navigate('/liveness-error', {
+         state: { similarityScore: similarity }
+       })
+     } else {
+       // Age too low or other failure
+       navigate('/result', {
+         state: { ageOver18: ageOk, similarityScore: similarity }
+       })
+     }
     }
   }
 

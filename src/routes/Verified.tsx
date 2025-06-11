@@ -48,7 +48,7 @@ export default function Verified() {
         {typeof state.similarityScore === 'number' && (
           <p style={{ marginBottom: '1rem' }}>
             Your liveness similarity score was{' '}
-            <strong>{state.similarityScore.toFixed(1)}%</strong>.
+            <strong>{state.similarityScore.toFixed(2)}%</strong>.
           </p>
         )}
       </div>

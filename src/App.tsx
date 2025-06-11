@@ -3,6 +3,7 @@ import Welcome          from './routes/Welcome'
 import AgeVerification  from './routes/AgeVerification'
 import Verified         from './routes/Verified'     // ← nuevo
 import Result           from './routes/Result'
+import LivenessError    from './routes/LivenessError'
 
 export default function App() {
   return (
@@ -10,8 +11,9 @@ export default function App() {
       <Routes>
         <Route path="/"         element={<Welcome />} />
         <Route path="/verify"   element={<AgeVerification />} />
-        <Route path="/verified" element={<Verified />} />     {/* nueva ruta */}
-        <Route path="/result"   element={<Result />} />
+        <Route path="/verified"      element={<Verified />} />
+        <Route path="/liveness-error" element={<LivenessError />} />
+        <Route path="/result"         element={<Result />} />
       </Routes>
     </BrowserRouter>
   )
