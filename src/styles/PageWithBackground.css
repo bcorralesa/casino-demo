@@ -35,6 +35,9 @@
 }
 
 .logo {
-  width: 120px;
-  margin-bottom: var(--spacing);
+  display: block;
+  max-width: 80%;       /* up to 80% of modal’s width */
+  width: 200px;         /* ideal width on desktop */
+  height: auto;         /* preserve aspect ratio */
+  margin: 0 auto var(--spacing);
 }
