@@ -33,7 +33,13 @@ export function useAgeVerification() {
           'Ocp-Apim-Subscription-Key': SUBS_KEY,
         },
         body: JSON.stringify({
-          payload: { documentVerification: { ageOver18: true } }
+         // payload: { documentVerification: { ageOver18: true } }
+          payload: {
+            documentVerification: {
+              portraitLivenessPassive: true,  // Enable passive liveness check
+              ageOver18: true, // Simulate age verification for testing
+            },
+          },
         }),
       });
 

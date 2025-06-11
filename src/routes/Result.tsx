@@ -3,7 +3,11 @@ import { useLocation, useNavigate } from 'react-router-dom'
 import logo from '../assets/idverifier-logo.png'
 import '../styles/PageWithBackground.css'
 
-type LocationState = { ageOver18: boolean }
+//type LocationState = { ageOver18: boolean }
+type LocationState = {
+  ageOver18: boolean
+  similarityScore?: number
+}
 
 export default function Result() {
   const { state } = useLocation() as { state?: LocationState }
@@ -26,6 +30,11 @@ export default function Result() {
         <p style={{ marginBottom: '2rem' }}>
           You do not meet the minimum age requirement to enter.
         </p>
+        {state?.similarityScore !== undefined && (
+          <p>
+            Your liveness similarity score was: <strong>{state.similarityScore}%</strong> <br/>
+          </p>
+        )}
         <button className="btn-secondary" onClick={() => navigate('/')}>
           Try Again
         </button>

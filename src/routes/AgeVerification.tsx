@@ -11,17 +11,33 @@ export default function AgeVerification() {
   const navigate = useNavigate()
   const [detail, setDetail] = useState<any>(null)
 
-  useEffect(() => {
-    startVerification()
-    const handler = (e: any) => {
-      setDetail(e.detail)
-      const ageOk = e.detail.documentVerificationResults.ageOver18
-      if (ageOk) navigate('/verified', { state: { ageOver18: ageOk } })
-      else     navigate('/result',   { state: { ageOver18: ageOk } })
+useEffect(() => {
+  startVerification()
+
+  const handler = (e: any) => {
+    const results = e.detail.documentVerificationResults
+    setDetail(results)
+
+    const ageOk = results.ageOver18
+    const similarity = results.portraitLivenessPassive.similarityScore
+    const liveOk = similarity > 80
+
+    if (ageOk && liveOk) {
+      // Ambos checks pasan → pantalla de éxito
+      navigate('/verified', {
+        state: { ageOver18: ageOk, similarityScore: similarity }
+      })
+    } else {
+      // Falla edad o liveness → pantalla de error
+      navigate('/result', {
+        state: { ageOver18: ageOk, similarityScore: similarity }
+      })
     }
-    window.addEventListener('ageVerificationResult', handler)
-    return () => window.removeEventListener('ageVerificationResult', handler)
-  }, [])
+  }
+
+  window.addEventListener('ageVerificationResult', handler)
+  return () => window.removeEventListener('ageVerificationResult', handler)
+}, [])
 
   const isMobile = /Mobi|Android|iPhone|iPad|iPod/.test(navigator.userAgent)
   useEffect(() => {
