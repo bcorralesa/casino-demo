@@ -1,54 +1,138 @@
-# React + TypeScript + Vite
+# Casino Demo
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A full-stack React + Vite + TypeScript application demonstrating age verification via ID Verifier API. Includes a server-side proxy for secure API calls, QR code flow for mobile devices, and a blurred casino background with floating modals.
 
-Currently, two official plugins are available:
+## Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+* **Age & Liveness Verification**: Checks `ageOver18` and optional `portraitLivenessPassive` liveness score.
+* **QR Code Flow**: Generates a QR code on desktop for mobile verification via custom scheme (`idverifier://?id=…`).
+* **Modal UI**: Floating modal over a blurred casino background on all pages.
+* **Auto-Reload**: Reloads verification page after 60 seconds if no result.
+* **One-Time JWT (optional)**: Proxy can issue a JWT proof token for secure sessions.
+* **Express Proxy**: Server-side (`server.js`) forwards requests to APIM, protecting subscription key.
 
-## Expanding the ESLint configuration
+## Table of Contents
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+* [Demo](#demo)
+* [Prerequisites](#prerequisites)
+* [Getting Started](#getting-started)
 
-```js
-export default tseslint.config({
-  extends: [
-    // Remove ...tseslint.configs.recommended and replace with this
-    ...tseslint.configs.recommendedTypeChecked,
-    // Alternatively, use this for stricter rules
-    ...tseslint.configs.strictTypeChecked,
-    // Optionally, add this for stylistic rules
-    ...tseslint.configs.stylisticTypeChecked,
-  ],
-  languageOptions: {
-    // other options...
-    parserOptions: {
-      project: ['./tsconfig.node.json', './tsconfig.app.json'],
-      tsconfigRootDir: import.meta.dirname,
-    },
-  },
-})
+  * [Environment Variables](#environment-variables)
+  * [Installation](#installation)
+  * [Development](#development)
+  * [Production Build](#production-build)
+* [Deployment](#deployment)
+
+  * [Azure Static Web Apps (legacy)](#azure-static-web-apps-legacy)
+  * [Azure App Service](#azure-app-service)
+* [Project Structure](#project-structure)
+* [Customizing](#customizing)
+* [License](#license)
+
+## Demo
+
+<!-- ![Demo GIF](docs/demo.gif) -->
+
+A walkthrough of the verification flow over a casino background.
+
+## Prerequisites
+
+* Node.js v18 or v20 LTS
+* npm or yarn
+* Git
+* An ID Verifier APIM subscription key
+
+## Getting Started
+
+### Environment Variables
+
+Create a `.env` file in the root with your settings:
+
+```
+VITE_SUBS_KEY=<your-subscription-key>
+VITE_APIM_BASE=https://reactid-api-management.azure-api.net
+JWT_SECRET=<optional-jwt-secret>
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+### Installation
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default tseslint.config({
-  plugins: {
-    // Add the react-x and react-dom plugins
-    'react-x': reactX,
-    'react-dom': reactDom,
-  },
-  rules: {
-    // other rules...
-    // Enable its recommended typescript rules
-    ...reactX.configs['recommended-typescript'].rules,
-    ...reactDom.configs.recommended.rules,
-  },
-})
+```bash
+git clone https://github.com/your-org/casino-demo.git
+cd casino-demo
+npm install
 ```
+
+### Development
+
+```bash
+npm run dev
+```
+
+* Frontend: `http://localhost:5173`
+* Dev proxy forwards `/api/*` to APIM via Vite config.
+
+### Production Build
+
+```bash
+npm run build
+```
+
+Outputs static files to `dist/`, and server code remains at `server.js`.
+
+## Deployment
+
+### Azure Static Web Apps (legacy)
+
+*If using SWA and Azure Functions proxy:*
+
+1. Configure `api_location: api` in workflow
+2. Deploy via `azure-static-web-apps-deploy` GitHub Action
+
+### Azure App Service
+
+1. Ensure `start` script in `package.json` is `node server.js`.
+2. Add App Settings in Azure:
+
+   * `VITE_SUBS_KEY`
+   * `VITE_APIM_BASE`
+   * `JWT_SECRET` (if using)
+3. Deploy with \[azure/webapps-deploy\@v2] using publish profile or OIDC.
+
+## Project Structure
+
+```
+/ ─ root
+├─ api/               # (if SWA) Azure Functions proxy
+├─ public/
+│   └─ assets/        # bg.jpg, idverifier-logo.png
+├─ src/
+│   ├─ assets/
+│   │   └─ idverifier-logo.png
+│   ├─ hooks/
+│   │   └─ useAgeVerification.ts
+│   ├─ routes/
+│   │   ├─ Welcome.tsx
+│   │   ├─ AgeVerification.tsx
+│   │   ├─ Verified.tsx
+│   │   ├─ Result.tsx
+│   │   └─ LivenessError.tsx
+│   ├─ styles/
+│   │   ├─ global.css
+│   │   └─ PageWithBackground.css
+│   ├─ server.js      # Express proxy
+│   └─ main.tsx       # React entry
+├─ .env
+├─ package.json
+├─ README.md         # <-- this file
+└─ vite.config.ts
+```
+
+## Customizing
+
+* **Branding**: Swap `public/assets/bg.jpg` and logo asset.
+* **Colors**: Update CSS variables in `global.css`.
+* **Flow**: Adjust liveness threshold in `AgeVerification.tsx` handler.
+
+## License
+
+MIT © Your Name
