@@ -1,4 +1,3 @@
-// src/routes/AgeVerification.tsx
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { QRCodeCanvas } from "qrcode.react";
@@ -11,82 +10,69 @@ export default function AgeVerification() {
   const { startVerification, loading, error, id } = useAgeVerification();
   const navigate = useNavigate();
 
-  // Kick off the POST as soon as we mount
+  // Arrancamos la verificación al montar
   useEffect(() => {
     startVerification();
   }, [startVerification]);
 
-  // Listen for our custom event, typed as VerificationEventDetail
+  // Escuchamos el evento que dispara useAgeVerification cuando acaba el polling
   useEffect(() => {
-    function handler(evt: Event) {
-      const e = evt as CustomEvent<VerificationEventDetail>;
-      const { ageOver18, portraitLivenessPassive } =
-        e.detail.documentVerificationResults;
-      const similarity = portraitLivenessPassive.similarityScore;
+    const handler = (e: Event) => {
+      const custom = e as CustomEvent<VerificationEventDetail>;
+      const results = custom.detail.documentVerificationResults;
+      const ageOk = results.ageOver18;
+      const similarity = results.portraitLivenessPassive.similarityScore;
       const liveOk = similarity > 80;
 
-      if (ageOver18 && liveOk) {
+      if (ageOk && liveOk) {
         navigate("/verified", {
-          state: { ageOver18, similarityScore: similarity },
+          state: { ageOver18: ageOk, similarityScore: similarity },
         });
       } else {
         navigate("/result", {
-          state: { ageOver18, similarityScore: similarity },
+          state: { ageOver18: ageOk, similarityScore: similarity },
         });
       }
-    }
-
-    window.addEventListener("ageVerificationResult", handler);
-    return () => {
-      window.removeEventListener("ageVerificationResult", handler);
     };
+    window.addEventListener("ageVerificationResult", handler);
+    return () => window.removeEventListener("ageVerificationResult", handler);
   }, [navigate]);
 
-  if (loading) {
+  if (loading)
     return (
       <div className="modal">
         <p>Loading… please wait</p>
       </div>
     );
-  }
-
-  if (error) {
+  if (error)
     return (
       <div className="modal">
         <p>Error: {error}</p>
       </div>
     );
-  }
 
   return (
     <div className="page-wrapper">
       <div className="background-image" />
 
       <div className="modal">
-        {/* 1. Logo de ID Verifier */}
-        <img
-          src={logo}
-          alt="ID Verifier"
-          className="logo"
-          style={{ marginBottom: "1rem" }}
-        />
+        {/* 1️⃣ Logo */}
+        <img src={logo} alt="ID Verifier" className="logo" />
 
-        {/* 2. Título */}
-        <h3 style={{ marginBottom: "1rem" }}>
-          Scan with your mobile to continue:
-        </h3>
+        {/* 2️⃣ Título */}
+        <h3 style={{ margin: "1rem 0" }}>Scan with your mobile to continue:</h3>
 
         {id ? (
           <>
-            {/* Spacer */}
+            {/* Espacio extra */}
             <div style={{ height: 16 }} />
 
-            {/* 3. QR code */}
+            {/* 3️⃣ QR code */}
             <QRCodeCanvas
               value={`idverifier://?id=${id}`}
               size={300}
               level="M"
-              includeMargin={true}
+              includeMargin
             />
 
             <p style={{ marginTop: "1rem" }}>

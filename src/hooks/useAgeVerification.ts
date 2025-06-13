@@ -1,5 +1,4 @@
-// src/hooks/useAgeVerification.ts
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import type {
   StartPayload,
   StartResponse,
@@ -7,8 +6,15 @@ import type {
 } from "../types/verification";
 
 const SUBS_KEY = import.meta.env.VITE_SUBS_KEY!;
-const POST_URL = "/api/idv/idvpayload";
-const GET_URL = (respId: string) => `/api/idv/idvpayload/${respId}`;
+
+// En local dev usamos el proxy de Vite; en prod llamamos a nuestra Azure Function
+const POST_URL = import.meta.env.DEV
+  ? "/api/idv/idvpayload"
+  : "/api/verify-age";
+const GET_URL = (respId: string) =>
+  import.meta.env.DEV
+    ? `/api/idv/idvpayload/${respId}`
+    : `/api/verify-age/${respId}`;
 
 export function useAgeVerification() {
   const [loading, setLoading] = useState(false);
@@ -16,10 +22,10 @@ export function useAgeVerification() {
   const [id, setId] = useState<string | null>(null);
   const respIdRef = useRef<string | null>(null);
 
-  const startVerification = async () => {
+  // useCallback para que startVerification no cambie en cada render
+  const startVerification = useCallback(async () => {
     setLoading(true);
     setError(null);
-
     try {
       const payload: StartPayload = {
         documentVerification: {
@@ -35,22 +41,19 @@ export function useAgeVerification() {
         },
         body: JSON.stringify({ payload }),
       });
-      if (!res.ok) throw new Error(`POST fallo: ${res.status}`);
+      if (!res.ok) throw new Error(`POST failed: ${res.status}`);
       const json = (await res.json()) as StartResponse;
       setId(json.id);
       respIdRef.current = json.responseId;
-    } catch (e: unknown) {
-      if (e instanceof Error) {
-        setError(e.message);
-      } else {
-        setError(String(e));
-      }
+    } catch (err) {
+      setError((err as Error).message);
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
+    // Si no hemos iniciado, no hacemos polling
     if (!respIdRef.current) return;
 
     const interval = setInterval(async () => {
@@ -58,19 +61,19 @@ export function useAgeVerification() {
         const res = await fetch(GET_URL(respIdRef.current!), {
           headers: { "Ocp-Apim-Subscription-Key": SUBS_KEY },
         });
-        if (res.status === 404) return;
+        if (res.status === 404) return; // aún pendiente → seguimos esperando
         clearInterval(interval);
-        if (!res.ok) throw new Error(`GET fallo: ${res.status}`);
+        if (!res.ok) throw new Error(`GET failed: ${res.status}`);
         const detail = (await res.json()) as VerificationEventDetail;
+        // Emitimos un evento con los resultados
         window.dispatchEvent(
           new CustomEvent<VerificationEventDetail>("ageVerificationResult", {
             detail,
           })
         );
-      } catch (e: unknown) {
+      } catch (err) {
         clearInterval(interval);
-        if (e instanceof Error) setError(e.message);
-        else setError(String(e));
+        setError((err as Error).message);
       }
     }, 2000);
 
