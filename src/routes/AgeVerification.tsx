@@ -1,97 +1,111 @@
 // src/routes/AgeVerification.tsx
-import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { useAgeVerification } from '../hooks/useAgeVerification'
-import { QRCodeCanvas } from 'qrcode.react'
-import logo from '../assets/idverifier-logo.png'
-import '../styles/PageWithBackground.css'
+import { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { QRCodeCanvas } from "qrcode.react";
+import { useAgeVerification } from "../hooks/useAgeVerification";
+import logo from "../assets/idverifier-logo.png";
+import "../styles/PageWithBackground.css";
+import type { VerificationEventDetail } from "../types/verification";
 
 export default function AgeVerification() {
-  const { startVerification, loading, error, id } = useAgeVerification()
-  const navigate = useNavigate()
-  const [detail, setDetail] = useState<any>(null)
+  const { startVerification, loading, error, id } = useAgeVerification();
+  const navigate = useNavigate();
 
-useEffect(() => {
-  startVerification()
+  // Kick off the POST as soon as we mount
+  useEffect(() => {
+    startVerification();
+  }, [startVerification]);
 
-  const handler = (e: any) => {
-    const results = e.detail.documentVerificationResults
-    setDetail(results)
+  // Listen for our custom event, typed as VerificationEventDetail
+  useEffect(() => {
+    function handler(evt: Event) {
+      const e = evt as CustomEvent<VerificationEventDetail>;
+      const { ageOver18, portraitLivenessPassive } =
+        e.detail.documentVerificationResults;
+      const similarity = portraitLivenessPassive.similarityScore;
+      const liveOk = similarity > 80;
 
-    const ageOk = results.ageOver18
-    const similarity = results.portraitLivenessPassive.similarityScore
-    const liveOk = similarity > 80           // now true if >80%
-
-    if (ageOk && liveOk) {
-      // Ambos checks pasan → pantalla de éxito
-      navigate('/verified', {
-        state: { ageOver18: ageOk, similarityScore: similarity }
-      })
-    } else {
-      // Falla edad o liveness → pantalla de error
-      //navigate('/result', {
-      //  state: { ageOver18: ageOk, similarityScore: similarity }
-      //})
-      // If age is OK but liveness isn’t, go to a custom “liveness error” page
-      if (ageOk) {
-       navigate('/liveness-error', {
-         state: { similarityScore: similarity }
-       })
-     } else {
-       // Age too low or other failure
-       navigate('/result', {
-         state: { ageOver18: ageOk, similarityScore: similarity }
-       })
-     }
+      if (ageOver18 && liveOk) {
+        navigate("/verified", {
+          state: { ageOver18, similarityScore: similarity },
+        });
+      } else {
+        navigate("/result", {
+          state: { ageOver18, similarityScore: similarity },
+        });
+      }
     }
+
+    window.addEventListener("ageVerificationResult", handler);
+    return () => {
+      window.removeEventListener("ageVerificationResult", handler);
+    };
+  }, [navigate]);
+
+  if (loading) {
+    return (
+      <div className="modal">
+        <p>Loading… please wait</p>
+      </div>
+    );
   }
 
-  window.addEventListener('ageVerificationResult', handler)
-  return () => window.removeEventListener('ageVerificationResult', handler)
-}, [])
-
-  const isMobile = /Mobi|Android|iPhone|iPad|iPod/.test(navigator.userAgent)
-  useEffect(() => {
-    if (id && isMobile) window.location.href = `idverifier://?id=${id}`
-  }, [id])
-
-  // **Reload after 60s** if still on this page
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      window.location.reload()
-    }, 120_000) // 60,000 ms = 60 s
-    return () => clearTimeout(timer)
-  }, [])
+  if (error) {
+    return (
+      <div className="modal">
+        <p>Error: {error}</p>
+      </div>
+    );
+  }
 
   return (
     <div className="page-wrapper">
       <div className="background-image" />
 
       <div className="modal">
-        <img src={logo} alt="ID Verifier" className="logo" />
-        {loading && <p>Verifying age… please wait</p>}
-        {error   && <p className="error">Error: {error}</p>}
-        {!loading && !error && id && !isMobile && (
+        {/* 1. Logo de ID Verifier */}
+        <img
+          src={logo}
+          alt="ID Verifier"
+          className="logo"
+          style={{ marginBottom: "1rem" }}
+        />
+
+        {/* 2. Título */}
+        <h3 style={{ marginBottom: "1rem" }}>
+          Scan with your mobile to continue:
+        </h3>
+
+        {id ? (
           <>
-            <p>Scan with your mobile to continue:</p>
-            <div style={{ height: '1rem' }} />
-            <QRCodeCanvas value={`idverifier://?id=${id}`} size={300} />
-            <p style={{ marginTop: '1rem', fontSize:'0.9rem' }}>
-              <strong>Do not close this page</strong> <br/> 
-              Once you complete the process on your mobile,<br/>
-              the flow will automatically continue here.
+            {/* Spacer */}
+            <div style={{ height: 16 }} />
+
+            {/* 3. QR code */}
+            <QRCodeCanvas
+              value={`idverifier://?id=${id}`}
+              size={300}
+              level="M"
+              includeMargin={true}
+            />
+
+            <p style={{ marginTop: "1rem" }}>
+              <strong>Do not close this page</strong>, your age verification
+              will resume here.
             </p>
-                        {/* ← New Return button */}
+
             <button
               className="btn-secondary"
-              style={{ marginTop: '2rem' }}
-              onClick={() => navigate('/')}
+              style={{ marginTop: "1rem" }}
+              onClick={() => navigate("/")}
             >
               Return
             </button>
           </>
+        ) : (
+          <p>Preparing your verification…</p>
         )}
       </div>
     </div>
-  )
+  );
 }
