@@ -29,7 +29,8 @@ export function useAgeVerification() {
     try {
       const payload: StartPayload = {
         documentVerification: {
-          portraitLivenessPassive: "NT",
+          portraitLivenessPassive: "RG", // o "NT" según tu lógica
+          // Aquí puedes cambiar a false si quieres simular un menor de edad
           ageOver18: true,
         },
       };
