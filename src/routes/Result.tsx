@@ -25,8 +25,8 @@ export default function Result() {
   // 2) Under-age
   const isUnderAge = state?.ageOver18 === false;
   // 3) Over-age pero liveness FAIL
-  const isLivenessFail = state?.ageOver18 === true && pct <= 80;
-
+  // const isLivenessFail = state?.ageOver18 === true && pct <= 80;
+  const isLivenessFail = pct <= 80;
   // Ahora mostramos la UI según cada uno de los dos errores
   return (
     <div className="page-wrapper">
