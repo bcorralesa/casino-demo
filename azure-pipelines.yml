@@ -7,49 +7,68 @@ pool:
   vmImage: 'ubuntu-latest'
 
 stages:
-# 1) Build: generar dist
+
+# 1) Build Stage: compila local, instala deps y crea el ZIP final
 - stage: Build
+  displayName: 'Build Stage'
   jobs:
   - job: Build
+    displayName: 'Instalar, compilar y empaquetar'
     steps:
       - checkout: self
+
+      # Instala Node y deps, build
       - task: NodeTool@0
-        inputs: { versionSpec: '20.x' }
+        inputs:
+          versionSpec: '20.x'
+        displayName: 'Use Node.js 20.x'
+
       - script: |
           npm install
           npm run build --if-present
         displayName: 'npm install & build'
-      # 1.1 Prepara carpeta “package” con dist + server.js + package.json
+
+      # Copia dist + server.js + package.json + node_modules a /package
       - task: CopyFiles@2
+        displayName: 'Copiar archivos para deploy'
         inputs:
           SourceFolder: '$(Build.SourcesDirectory)'
           Contents: |
             dist/**
             server.js
             package.json
+            node_modules/**
           TargetFolder: '$(Build.ArtifactStagingDirectory)/package'
-      # 1.2 Zippea esa carpeta completa
+
+      # Zippea esa carpeta completa
       - task: ArchiveFiles@2
+        displayName: 'Zip de la app completa'
         inputs:
           rootFolderOrFile: '$(Build.ArtifactStagingDirectory)/package'
           includeRootFolder: false
           archiveType: zip
           archiveFile: '$(Build.ArtifactStagingDirectory)/app.zip'
           replaceExistingArchive: true
+
+      # Publica el artifact
       - publish: $(Build.ArtifactStagingDirectory)/app.zip
         artifact: drop
 
-# 2) Deploy: usa AzureWebApp@1
+# 2) Deploy Stage: desactiva build remoto y manda el ZIP a Kudu (sin volver a compilar)
 - stage: Deploy
+  displayName: 'Deploy Stage'
   dependsOn: Build
   condition: succeeded()
   jobs:
   - job: Deploy
+    displayName: 'Deploy con Kudu sin build remoto'
     steps:
       - download: current
         artifact: drop
+
+      # 2.2 Deploy ZIP (solo extracción y arranque de server.js)
       - task: AzureWebApp@1
-        displayName: 'Deploy con Kudu (incluye server.js)'
+        displayName: 'Deploy con Kudu'
         inputs:
           azureSubscription: 'SC-CasinoDemo'
           appType: 'webAppLinux'
