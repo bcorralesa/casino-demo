@@ -7,66 +7,51 @@ pool:
   vmImage: 'ubuntu-latest'
 
 stages:
-
-# 1) Build Stage: genera /dist y lo empaqueta en ZIP
+# 1) Build: generar dist
 - stage: Build
-  displayName: 'Build Stage'
   jobs:
   - job: Build
-    displayName: 'Install & Build'
     steps:
       - checkout: self
-
       - task: NodeTool@0
-        inputs:
-          versionSpec: '20.x'
-        displayName: 'Use Node.js 20.x'
-
+        inputs: { versionSpec: '20.x' }
       - script: |
           npm install
           npm run build --if-present
         displayName: 'npm install & build'
-
-      - task: ArchiveFiles@2
-        displayName: 'Zip de assets estáticos'
+      # 1.1 Prepara carpeta “package” con dist + server.js + package.json
+      - task: CopyFiles@2
         inputs:
-          rootFolderOrFile: '$(Build.SourcesDirectory)/dist'
+          SourceFolder: '$(Build.SourcesDirectory)'
+          Contents: |
+            dist/**
+            server.js
+            package.json
+          TargetFolder: '$(Build.ArtifactStagingDirectory)/package'
+      # 1.2 Zippea esa carpeta completa
+      - task: ArchiveFiles@2
+        inputs:
+          rootFolderOrFile: '$(Build.ArtifactStagingDirectory)/package'
           includeRootFolder: false
           archiveType: zip
-          archiveFile: '$(Build.ArtifactStagingDirectory)/release.zip'
+          archiveFile: '$(Build.ArtifactStagingDirectory)/app.zip'
           replaceExistingArchive: true
-
-      - publish: $(Build.ArtifactStagingDirectory)/release.zip
+      - publish: $(Build.ArtifactStagingDirectory)/app.zip
         artifact: drop
 
-# 2) Deploy Stage: descarga el drop y lo sube con Azure CLI (sin Oryx)
+# 2) Deploy: usa AzureWebApp@1
 - stage: Deploy
-  displayName: 'Deploy Stage'
   dependsOn: Build
   condition: succeeded()
   jobs:
   - job: Deploy
-    displayName: 'Deploy estático con Azure CLI'
     steps:
-      # descarga el pipeline artifact “drop”
       - download: current
         artifact: drop
-
-      # (opcional) depura para ver dónde quedó el ZIP
-      - script: |
-          echo "Pipeline.Workspace = $(Pipeline.Workspace)"
-          ls -R "$(Pipeline.Workspace)/drop"
-        displayName: '🔍 Debug: listar drop'
-
-      # deploy usando la ruta correcta
-      - task: AzureCLI@2
-        displayName: 'Deploy estático con CLI'
+      - task: AzureWebApp@1
+        displayName: 'Deploy con Kudu (incluye server.js)'
         inputs:
           azureSubscription: 'SC-CasinoDemo'
-          scriptType: bash
-          scriptLocation: inlineScript
-          inlineScript: |
-            az webapp deployment source config-zip \
-              --resource-group REACT-WEU-DEV \
-              --name reactcasinodemo \
-              --src $(Pipeline.Workspace)/drop/release.zip
+          appType: 'webAppLinux'
+          appName: 'reactcasinodemo'
+          package: '$(Pipeline.Workspace)/drop/app.zip'
