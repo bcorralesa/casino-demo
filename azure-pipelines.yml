@@ -8,29 +8,25 @@ pool:
 
 stages:
 
-# 1) Build Stage
+# 1) Build Stage: genera /dist y lo empaqueta en ZIP
 - stage: Build
   displayName: 'Build Stage'
   jobs:
   - job: Build
     displayName: 'Install & Build'
     steps:
-      # 1.1 Checkout del repositorio
       - checkout: self
 
-      # 1.2 Configurar Node.js 20.x
       - task: NodeTool@0
         inputs:
           versionSpec: '20.x'
         displayName: 'Use Node.js 20.x'
 
-      # 1.3 npm install + build (genera carpeta dist)
       - script: |
           npm install
           npm run build --if-present
         displayName: 'npm install & build'
 
-      # 1.4 Zip de la carpeta dist
       - task: ArchiveFiles@2
         displayName: 'Zip de assets estáticos'
         inputs:
@@ -40,11 +36,10 @@ stages:
           archiveFile: '$(Build.ArtifactStagingDirectory)/release.zip'
           replaceExistingArchive: true
 
-      # 1.5 Publicar el artefacto
       - publish: $(Build.ArtifactStagingDirectory)/release.zip
         artifact: drop
 
-# 2) Deploy Stage
+# 2) Deploy Stage: sube el ZIP con Azure CLI (sin Oryx)
 - stage: Deploy
   displayName: 'Deploy Stage'
   dependsOn: Build
@@ -53,19 +48,17 @@ stages:
   - job: Deploy
     displayName: 'Deploy estático con Azure CLI'
     steps:
-      # 2.1 Descargar el artefacto “drop”
       - download: current
         artifact: drop
 
-      # 2.2 Desplegar el ZIP sin invocar Oryx
       - task: AzureCLI@2
         displayName: 'Deploy estático con CLI'
         inputs:
-          azureSubscription: 'SC-CasinoDemo'       # tu Service Connection
+          azureSubscription: 'SC-CasinoDemo'      # tu Service Connection
           scriptType: bash
           scriptLocation: inlineScript
           inlineScript: |
             az webapp deployment source config-zip \
-              --resource-group MiResourceGroup  \
+              --resource-group REACT-WEU-DEV    \
               --name reactcasinodemo            \
               --src $(Build.ArtifactStagingDirectory)/release.zip
