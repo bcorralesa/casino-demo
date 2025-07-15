@@ -24,6 +24,13 @@ stages:
           npm install
           npm run build --if-present
         displayName: 'npm install & build'
+
+              # DEBUG: ver dónde quedó tu carpeta de build
+      - script: |
+          echo ">>> Build.SourcesDirectory = $(Build.SourcesDirectory)"
+          ls -R $(Build.SourcesDirectory)
+        displayName: '🔍 Debug: listar carpetas y archivos'
+
       - task: ArchiveFiles@2
         displayName: 'Zip de assets estáticos'
         inputs:
