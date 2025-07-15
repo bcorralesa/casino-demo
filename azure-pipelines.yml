@@ -1,0 +1,75 @@
+# Starter pipeline
+# Start with a minimal pipeline that you can customize to build and deploy your code.
+# Add steps that build, run tests, deploy, and more:
+# https://aka.ms/yaml
+
+# azure-pipelines.yml
+
+trigger:
+  branches:
+    include:
+      - main
+
+stages:
+# 1) Build
+- stage: Build
+  displayName: 'Build Stage'
+  jobs:
+  - job: Build
+    displayName: 'Instalar, compilar y testear'
+    pool:
+      vmImage: 'ubuntu-latest'
+    steps:
+      # 1.1 Checkout
+      - checkout: self
+
+      # 1.2 Instalar Node.js 20.x
+      - task: NodeTool@0
+        inputs:
+          versionSpec: '20.x'
+        displayName: 'Configurar Node.js'
+
+      # 1.3 npm install, build y test
+      - script: |
+          npm install
+          npm run build --if-present
+          npm run test --if-present
+        displayName: 'npm install & build & test'
+
+      # 1.4 Empaquetar en ZIP
+      - task: ArchiveFiles@2
+        inputs:
+          rootFolderOrFile: '$(System.DefaultWorkingDirectory)'
+          includeRootFolder: false
+          archiveType: zip
+          archiveFile: '$(Build.ArtifactStagingDirectory)/release.zip'
+          replaceExistingArchive: true
+        displayName: 'Crear release.zip'
+
+      # 1.5 Publicar artifact llamado “drop”
+      - publish: $(Build.ArtifactStagingDirectory)/release.zip
+        artifact: drop
+
+# 2) Deploy
+- stage: Deploy
+  displayName: 'Deploy Stage'
+  dependsOn: Build
+  condition: succeeded()
+  jobs:
+  - job: Deploy
+    displayName: 'Desplegar en Azure Web App'
+    pool:
+      vmImage: 'ubuntu-latest'
+    steps:
+      # 2.1 Descargar el artifact “drop”
+      - download: current
+        artifact: drop
+
+      # 2.2 Deploy a la Web App
+      - task: AzureWebApp@1
+        inputs:
+          azureSubscription: 'SC-MyWebApp'    # <--- Nombre de tu Service Connection
+          appType: 'webApp'
+          appName: 'reactcasinodemo'         # <--- Nombre de tu Web App
+          package: '$(Pipeline.Workspace)/drop/release.zip'
+        displayName: 'Deploy to Azure Web App'
