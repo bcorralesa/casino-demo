@@ -68,7 +68,7 @@ stages:
       # 2.2 Deploy a la Web App
       - task: AzureWebApp@1
         inputs:
-          azureSubscription: 'SC-MyWebApp'    # <--- Nombre de tu Service Connection
+          azureSubscription: 'SC-Casinodemo'    # <--- Nombre de tu Service Connection
           appType: 'webApp'
           appName: 'reactcasinodemo'         # <--- Nombre de tu Web App
           package: '$(Pipeline.Workspace)/drop/release.zip'
