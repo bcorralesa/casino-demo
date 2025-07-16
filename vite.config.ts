@@ -6,7 +6,7 @@ export default defineConfig({
   server: {
     proxy: {
       "/api": {
-        target: "https://reactid-api-management.azure-api.net",
+        target: "https://reactweudevapim.azure-api.net",
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api/, ""),
       },
